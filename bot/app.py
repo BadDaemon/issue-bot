@@ -68,30 +68,45 @@ def validate_version(label, value):
 
 
 def post_reply(iid, reply):
-    resp = requests.post(
-        f"https://gitlab.com/api/v4/projects/{project}/issues/{iid}/notes",
-        json={"body": "\n".join(reply)},
-        headers=headers,
-    )
+    try:
+        resp = requests.post(
+            f"https://gitlab.com/api/v4/projects/{project}/issues/{iid}/notes",
+            json={"body": "\n".join(reply)},
+            headers=headers,
+        )
+    except requests.exceptions.RequestException as e:
+        print(e)
+        return
+
     if resp.status_code != 201:
         print(f"Error replying - ${resp.json()}")
 
 
 def edit_issue(iid, edits):
-    resp = requests.put(
-        f"https://gitlab.com/api/v4/projects/{project}/issues/{iid}",
-        json=edits,
-        headers=headers,
-    )
+    try:
+        resp = requests.put(
+            f"https://gitlab.com/api/v4/projects/{project}/issues/{iid}",
+            json=edits,
+            headers=headers,
+        )
+    except requests.exceptions.RequestException as e:
+        print(e)
+        return
+
     if resp.status_code != 200:
         print(f"Error updating labels - ${resp.json()}")
 
 
 def process_new():
-    resp = requests.get(
-        f"https://gitlab.com/api/v4/projects/{project}/issues?state=opened&labels=None",
-        headers=headers,
-    )
+    try:
+        resp = requests.get(
+            f"https://gitlab.com/api/v4/projects/{project}/issues?state=opened&labels=None",
+            headers=headers,
+        )
+    except requests.exceptions.RequestException as e:
+        print(e)
+        return
+
     if resp.status_code != 200:
         print(f"Error getting issues - {resp.json()}")
         return
@@ -124,10 +139,15 @@ def process_new():
 
 
 def process_invalid():
-    resp = requests.get(
-        f"https://gitlab.com/api/v4/projects/{project}/issues?state=opened&labels=invalid",
-        headers=headers,
-    )
+    try:
+        resp = requests.get(
+            f"https://gitlab.com/api/v4/projects/{project}/issues?state=opened&labels=invalid",
+            headers=headers,
+        )
+    except requests.exceptions.RequestException as e:
+        print(e)
+        return
+
     if resp.status_code != 200:
         print(f"Error getting invalid issues - {resp.json()}")
         return
@@ -157,21 +177,31 @@ def process_invalid():
 
 def load_valid_devices():
     global options
-    new_options = [
-        x["model"]
-        for x in requests.get(
-            "https://raw.githubusercontent.com/LineageOS/hudson/master/updater/devices.json"
-        ).json()
-    ]
+    try:
+        new_options = [
+            x["model"]
+            for x in requests.get(
+                "https://raw.githubusercontent.com/LineageOS/hudson/master/updater/devices.json"
+            ).json()
+        ]
+    except requests.exceptions.RequestException as e:
+        print(e)
+        return
+
     if new_options:
         options["device"] = new_options
 
 
 def load_valid_versions():
     global options
-    r = requests.get(
-        "https://raw.githubusercontent.com/LineageOS/hudson/master/lineage-build-targets"
-    )
+    try:
+        r = requests.get(
+            "https://raw.githubusercontent.com/LineageOS/hudson/master/lineage-build-targets"
+        )
+    except requests.exceptions.RequestException as e:
+        print(e)
+        return
+
     new_options = []
     for line in r.text.splitlines():
         if line is None or line == "" or line.startswith("#"):
