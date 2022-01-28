@@ -1,11 +1,9 @@
 import requests
-import json
 import re
 import time
 
 from datetime import datetime, timedelta
 from threading import Timer
-from urllib.parse import urlencode
 from bot import config
 
 headers = {"Private-Token": config.GITLAB_TOKEN}
@@ -69,7 +67,7 @@ def validate(description):
 def validate_version(label, value):
     if label != "version" or not value:
         return False, value
-    match = re.search("(lineage-)?(\d{2}\.\d{1})(-20\d{6}-NIGHTLY-.+(\.zip)?)?", value)
+    match = re.search(r"(lineage-)?(\d{2}\.\d)(-20\d{6}-NIGHTLY-.+(\.zip)?)?", value)
     version = None
     if match:
         version = match.group(2)
@@ -217,10 +215,10 @@ def load_valid_versions():
     for line in r.text.splitlines():
         if line is None or line == "" or line.startswith("#"):
             continue
-        result = re.match("^([\w\d]*?) (\w*?) ([\w\d\-.]*) (\w*)", line)
+        result = re.match(r"^([\w\d]*?) (\w*?) ([\w\d\-.]*) (\w*)", line)
         if result:
             branch = result.group(3).replace("lineage-", "")
-            if not branch in new_options:
+            if branch not in new_options:
                 new_options.append(branch)
     if new_options:
         options["version"] = new_options
