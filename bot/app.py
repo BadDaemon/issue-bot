@@ -34,21 +34,32 @@ def validate(description):
     seen = []
     for line in re.sub("(<!--.*?-->)", "", description, flags=re.DOTALL).splitlines():
         if line.startswith("/") and " " in line:
-            label, value = line.split(" ")[0:2]
-            label = label[1:]
-            if value:
-                seen.append(label)
-            already_valid, value = validate_version(label, value)
-            if label in label_data.keys():
-                if label_data[label]["data"]:
-                    if value in options[label] or already_valid:
-                        labels.append(f"{label}:{value}")
-                    elif value:
+            str_list = list(filter(None, line.split("/")))
+            for pair in str_list:
+                if " " not in pair:
+                    continue
+                spaced = list(filter(None, pair.split(" ")))
+                if len(spaced) < 2:
+                    continue
+                label, value = spaced[0:2]
+                if value:
+                    if label in seen:
                         errors.append(
-                            f"- {value} is not a valid {label}. Supported values are {options[label]}"
+                            f"{label} is duplicated, please specify only one {label}"
                         )
-                else:
-                    labels.append(f"{label}")
+                    else:
+                        seen.append(label)
+                if label in label_data.keys():
+                    if label_data[label]["data"]:
+                        already_valid, value = validate_version(label, value)
+                        if value in options[label] or already_valid:
+                            labels.append(f"{label}:{value}")
+                        elif value:
+                            errors.append(
+                                f"- {value} is not a valid {label}. Supported values are {options[label]}"
+                            )
+                    else:
+                        labels.append(f"{label}")
     missing_labels = label_data.keys() - set(seen)
     for label in missing_labels:
         errors.append(label_data[label]["error"])
