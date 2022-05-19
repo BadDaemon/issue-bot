@@ -25,6 +25,10 @@ label_data = {
     },
 }
 
+version_aliases = {
+    "19.1": "19",
+}
+
 
 def validate(description):
     errors = []
@@ -218,6 +222,8 @@ def load_valid_versions():
         result = re.match(r"^([\w\d]*?) (\w*?) ([\w\d\-.]*) (\w*)", line)
         if result:
             branch = result.group(3).replace("lineage-", "")
+            for key, value in version_aliases:
+                branch = branch.replace(key, value)
             if branch not in new_options:
                 new_options.append(branch)
     if new_options:
